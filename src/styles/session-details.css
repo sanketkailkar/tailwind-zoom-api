@@ -1,0 +1,16 @@
+.session-container {
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.back-btn {
+    width: 150px;
+}
+
+.session-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}

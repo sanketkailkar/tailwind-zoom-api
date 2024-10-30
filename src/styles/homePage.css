@@ -1,0 +1,68 @@
+.main-container {
+    display: flex;
+    /* justify-content: center; */
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+    padding: 50px;
+    gap: 40px;
+}
+
+.user-input-container {
+    width: 30%;
+    height: auto;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    border: 2px solid rgb(86, 156, 209);
+    border-radius: 20px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.input-and-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px 20px 0px 20px;
+    width: 100%;
+}
+
+.session-input {
+    padding: 10px;
+    background: white;
+    border: 1px solid rgb(135, 132, 132);
+    border-radius: 5px;
+    width: 100%;
+}
+
+.create-session-button {
+    padding: 10px;
+    background: white;
+    border: 1px solid rgb(46, 155, 239);
+    border-radius: 5px;
+    color: rgb(46, 155, 239);
+}
+
+.create-session-button:disabled {
+    padding: 10px;
+    background: rgb(224, 222, 222);
+    border: 1px solid rgb(135, 132, 132);
+    border-radius: 5px;
+    color: rgb(130, 130, 130);
+}
+
+.create-session-button:disabled:hover {
+    padding: 10px;
+    background: rgb(224, 222, 222);
+    border: 1px solid rgb(135, 132, 132);
+    border-radius: 5px;
+    color: rgb(130, 130, 130);
+}
+
+.create-session-button:hover {
+    background: rgb(21, 134, 220);
+    border: 1px solid rgb(21, 134, 220);
+    border-radius: 20px;
+    color: white;
+}

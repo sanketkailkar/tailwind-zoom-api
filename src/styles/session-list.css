@@ -1,0 +1,23 @@
+.session-list-container {
+    width: 100%;
+    border: 1px solid black;
+    padding: 30px;
+    border-radius: 20px;
+    height: auto;
+    text-align: center;
+}
+
+.list {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    gap: 40px;
+}
+
+.list-info {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    flex-direction: row;
+}

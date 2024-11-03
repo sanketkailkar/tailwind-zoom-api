@@ -63,6 +63,9 @@ export default function Home() {
         sessionPassword,
       });
       console.log("CREATE", response);
+      const encodedSessionName = encodeURIComponent(sessionName);
+      push(`/videoCall/${encodedSessionName}`);
+
     } catch (error) {
       console.error("Failed to create session:", error.message);
     } finally {

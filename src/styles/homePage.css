@@ -8,6 +8,13 @@
     gap: 40px;
 }
 
+.select-date {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 40px;
+}
+
 .user-input-container {
     width: 30%;
     height: auto;

@@ -7,12 +7,21 @@
     text-align: center;
 }
 
+.session-list-container > ul {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+}
+
 .list {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-direction: row;
     gap: 40px;
+    width: 100%;
 }
 
 .list-info {

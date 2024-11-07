@@ -1,11 +1,14 @@
-"use client"
-import { useEffect, useState } from "react";
+"use client";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import SessionsList from "../components/SessionsList";
 import { useRouter } from "next/navigation";
 import "../styles/homePage.css";
 import { Button, DatePicker, Input, Form, Typography } from "antd";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
+import { SESSION } from "@/constants";
+import { serialize } from "cookie";
+import toastNotification from "@/components/Notification";
 
 const { Title } = Typography;
 
@@ -24,24 +27,30 @@ export default function Home() {
   const [submit, setSubmit] = useState(false);
   const [dates, setDates] = useState({ fromDate: null, toDate: null });
 
-  const VerifyJWT = async () => {
+  const isFetched = useRef(false);
+  const initialLoad = useRef(true);
+
+  const verifyJWT = async () => {
     try {
-      const { data } = await axios.get("/api/verifyJWT");
+      await axios.get("/api/verifyJWT");
     } catch (error) {
-      console.error("Error fetching sessions:", error);
+      console.error("Error verifying JWT:", error);
     }
-  }
+  };
 
   const fetchAllPastSessions = async () => {
     try {
+      const fromDate = dates.fromDate || dayjs().format("YYYY-MM-DD");
+      const toDate = dates.toDate || dayjs().format("YYYY-MM-DD");
+
       setIsLoading(true);
       const { data } = await axios.post("/api/getPastSessions", {
-        fromDate: dates.fromDate,
-        toDate: dates.toDate
+        fromDate,
+        toDate,
       });
       setPastSessions(data.sessions);
     } catch (error) {
-      console.error("Error fetching sessions:", error);
+      console.error("Error fetching past sessions:", error);
     } finally {
       setIsLoading(false);
     }
@@ -49,14 +58,17 @@ export default function Home() {
 
   const fetchAllLiveSessions = async () => {
     try {
+      const fromDate = dates.fromDate || dayjs().format("YYYY-MM-DD");
+      const toDate = dates.toDate || dayjs().format("YYYY-MM-DD");
+
       setIsLiveSessionLoading(true);
-      const { data } = await axios.post(`/api/getLiveSessions`, {
-        fromDate: dates.fromDate,
-        toDate: dates.toDate
+      const { data } = await axios.post("/api/getLiveSessions", {
+        fromDate,
+        toDate,
       });
       setLiveSessions(data.sessions);
     } catch (error) {
-      console.error("Error fetching sessions:", error);
+      console.error("Error fetching live sessions:", error);
     } finally {
       setIsLiveSessionLoading(false);
     }
@@ -74,9 +86,19 @@ export default function Home() {
         sessionName,
         sessionPassword,
       });
-      console.log("CREATE", response);
+
+      // Serializing response.data to set as a cookie
+      const serializedCookie = serialize(SESSION, JSON.stringify(response.data));
+
+      // Setting cookie using document.cookie on the client side
+      document.cookie = serializedCookie;
+      const encodedPwd = encodeURI(response.data.session_password);
+      // push(`/call/${response.data.session_name}?pwd=${encodedPwd}`);
+      push(`/join?session=${response.data.session_name}&pwd=${encodedPwd}`);
+      // router.push(`/call/${sessionName}`);
     } catch (error) {
-      console.error("Failed to create session:", error.message);
+      console.error("Failed to create session:", error.response.data.error);
+      toastNotification("error", error.response.data.error);
     } finally {
       setIsCreatingSession(false);
     }
@@ -84,7 +106,7 @@ export default function Home() {
 
   const handleDateChange = (field, value) => {
     const formattedDate = value ? dayjs(value).format("YYYY-MM-DD") : null;
-    setDates(prevDates => ({ ...prevDates, [field]: formattedDate }));
+    setDates((prevDates) => ({ ...prevDates, [field]: formattedDate }));
   };
 
   const handleSubmit = () => {
@@ -96,23 +118,28 @@ export default function Home() {
   useEffect(() => {
     const fetchToken = async () => {
       try {
-        const { data } = await axios.post("/api/setToken");
-        console.log(data);
+        await axios.post("/api/setToken");
       } catch (error) {
         console.error("Error fetching token:", error);
       }
+    };
+
+    if (!isFetched.current) {
+      isFetched.current = true;
+      fetchToken();
+      verifyJWT();
     }
-    const getData = async () => {
-      await fetchToken();
-      await VerifyJWT();
-    }
-    getData();
   }, []);
 
   useEffect(() => {
-    if (fromDate && toDate) {
+    if (initialLoad.current) {
+      initialLoad.current = false;
       fetchAllPastSessions();
       fetchAllLiveSessions();
+    } else if (submit) {
+      fetchAllPastSessions();
+      fetchAllLiveSessions();
+      setSubmit(false);
     }
   }, [submit]);
 
@@ -146,13 +173,13 @@ export default function Home() {
         </div>
       </div>
 
-      <div>
+      <div className="past-and-live-sessions">
         <Title level={2}>Past and Live Sessions</Title>
         <Form form={form} layout="inline" className="select-date">
           <Form.Item name="fromDate" label="From">
             <DatePicker
               placeholder="From"
-              onChange={(value) => handleDateChange('fromDate', value)}
+              onChange={(value) => handleDateChange("fromDate", value)}
               value={dates.fromDate ? dayjs(dates.fromDate) : null}
             />
           </Form.Item>
@@ -160,7 +187,7 @@ export default function Home() {
           <Form.Item name="toDate" label="To">
             <DatePicker
               placeholder="To"
-              onChange={(value) => handleDateChange('toDate', value)}
+              onChange={(value) => handleDateChange("toDate", value)}
               value={dates.toDate ? dayjs(dates.toDate) : null}
             />
           </Form.Item>
@@ -177,11 +204,9 @@ export default function Home() {
         </Form>
       </div>
 
-      <Title level={2}>Past Sessions</Title>
-      <SessionsList sessions={pastSessions} loading={isLoading} type={"past"} />
+      <SessionsList sessions={pastSessions} loading={isLoading} type={"past"} title={"Past Sessions"}/>
 
-      <Title level={2}>Live Sessions</Title>
-      <SessionsList sessions={liveSessions} loading={isLiveSessionLoading} type={"live"} />
+      <SessionsList sessions={liveSessions} loading={isLiveSessionLoading} type={"live"} title={"Live Sessions"}/>
     </div>
   );
 }

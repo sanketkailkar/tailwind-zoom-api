@@ -1,25 +1,23 @@
 import { COOKIE_NAME } from '@/constants';
+import { decodeSessionId } from '@/lib/helper';
 import axios from 'axios';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-export async function GET(req) {
+export async function POST(req) {
+    const { sessionId, type } = await req.json();
+    const session = decodeSessionId(sessionId);
 
-    const { searchParams } = new URL(req.url);
-    const sessionId = searchParams.get('sessionId');
-    const type = searchParams.get("type");
-
-    const cookieStore = await cookies();
+    const cookieStore = cookies();
     const token = cookieStore.get(COOKIE_NAME);
     const { value } = token;
 
-    if (!sessionId) {
-        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    if (!session) {
+        return NextResponse.json({ error: 'Session Id required' }, { status: 401 });
     }
 
-
     try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_ZOOM_BASE_URL}/${sessionId}?type=${type}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_ZOOM_BASE_URL}/${session}?type=${type}`, {
             headers: {
                 "Authorization": `Bearer ${value}`,
                 "Accept": 'application/json'

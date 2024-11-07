@@ -19,7 +19,6 @@ export async function POST(req) {
         return NextResponse.json({ error: "No token available" }, { status: 401 });
     }
 
-    console.log({ value, sessionName, sessionPassword});
     try {
         const response = await axios.post(process.env.NEXT_PUBLIC_ZOOM_BASE_URL,
             {
@@ -35,7 +34,7 @@ export async function POST(req) {
 
         return NextResponse.json(response.data);
     } catch (error) {
-        console.error("Error fetching sessions:", error.message);
-        return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
+        console.error("Error creating session:", error.response.data.message);
+        return NextResponse.json({ error: error.response.data.message || "Failed to create session" }, { status: error.status });
     }
 }

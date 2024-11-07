@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import "../../../styles/session-details.css";
 import { Button } from "antd";
+import { encodeSessionId } from "@/lib/helper";
 
 const SessionDetails = ({ params }) => {
     const { push } = useRouter();
@@ -18,8 +19,10 @@ const SessionDetails = ({ params }) => {
                 const params = new URLSearchParams(window.location.search);
                 const type = params.get("type");
 
-                const response = await axios.get(`/api/getSessionDetails?sessionId=${sessionId}&type=${type}`);
-                console.log(response.data);
+                const response = await axios.post(`/api/getSessionDetails`,{
+                    sessionId : encodeSessionId(sessionId),
+                    type : type
+                });
                 setData(response.data);
             } catch (error) {
                 console.error("Error fetching session details:", error);

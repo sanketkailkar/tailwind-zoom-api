@@ -1,22 +1,24 @@
 .main-container {
     display: flex;
-    /* justify-content: center; */
     align-items: center;
-    height: 100vh;
     flex-direction: column;
-    padding: 50px;
+    margin: 30px;
     gap: 40px;
+}
+
+.past-and-live-sessions {
+    width: 100%;
 }
 
 .select-date {
     display: flex;
-    justify-content: space-around;
     align-items: center;
     gap: 40px;
 }
 
 .user-input-container {
-    width: 30%;
+    width: 100%;
+    max-width: 500px;
     height: auto;
     display: flex;
     align-items: center;

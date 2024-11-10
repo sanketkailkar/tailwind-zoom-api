@@ -71,9 +71,9 @@ const Videocall = (props) => {
       );
       videoContainerRef.current.appendChild(userVideo);
 
-      setIsEmpty(videoContainerRef.current.children.length === 0);
-    }
-  };
+    };
+    setIsEmpty(videoContainerRef.current.children.length === 0);
+  }
 
   const leaveSession = async () => {
     client.current.off("peer-video-state-change", (payload) => renderVideo(payload));
@@ -105,7 +105,7 @@ const Videocall = (props) => {
 
       <div className="video-container" style={inSession ? {} : { display: "none" }}>
         <video-player-container ref={videoContainerRef} style={videoPlayerStyle} >
-          {isEmpty===0 && <>
+          {isEmpty===0 || isEmpty && <>
             <div className="no-one-shared-screen">
               <p>No one started a video</p>
             </div>

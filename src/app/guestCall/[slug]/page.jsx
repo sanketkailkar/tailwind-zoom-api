@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { cookies } from "next/headers";
 import Script from "next/script";
 
-const Videocall = dynamic(() => import("../../../components/Videocall"), { ssr: false });
+const Guest = dynamic(() => import("../../../components/GuestVideoCall"), { ssr: false });
 
 export default async function Page({ params, searchParams }) {
     const decodedSlug = decodeURIComponent(params.slug);
@@ -24,7 +24,7 @@ export default async function Page({ params, searchParams }) {
 
     return (
         <main>
-            <Videocall
+            <Guest
                 topic={session_name}
                 token={jwt}
                 sessions_password={session_password}

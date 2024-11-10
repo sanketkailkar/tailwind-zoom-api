@@ -34,11 +34,9 @@ const SessionsList = ({ sessions, loading, type, title }) => {
                                     type === "live" ?
                                         <>
                                             <h4>Start Date: {dayjs(session.start_time).format("YYYY-MM-DD") || "-"}</h4>
-                                            <h4>Users: {session.user_count || "-"}</h4>
                                         </> :
                                         <>
                                             <h4>End Date: {dayjs(session.end_time).format("YYYY-MM-DD") || "-"}</h4>
-                                            <h4>Users: {session.user_count || "-"}</h4>
                                         </>
                                 }
                             </div>

@@ -13,8 +13,8 @@ const Videocall = (props) => {
 
   const [inSession, setInSession] = useState(false);
   const client = useRef(zoomClient);
-  const [isVideoMuted, setIsVideoMuted] = useState(true); // Start with video muted
-  const [isAudioMuted, setIsAudioMuted] = useState(true); // Start with audio muted
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
+  const [isAudioMuted, setIsAudioMuted] = useState(true);
   const videoContainerRef = useRef(null);
   const sessionJoined = useRef(false);
   const [isEmpty, setIsEmpty] = useState(true);
@@ -105,7 +105,7 @@ const Videocall = (props) => {
 
       <div className="video-container" style={inSession ? {} : { display: "none" }}>
         <video-player-container ref={videoContainerRef} style={videoPlayerStyle} >
-          {isEmpty && <>
+          {isEmpty===0 && <>
             <div className="no-one-shared-screen">
               <p>No one started a video</p>
             </div>

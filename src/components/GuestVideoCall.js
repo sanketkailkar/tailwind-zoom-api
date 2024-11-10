@@ -4,7 +4,7 @@ import { VideoQuality } from "@zoom/videosdk";
 import { Button } from "antd";
 import { useEffect, useRef, useState } from "react";
 import "../styles/videoCall.css";
-import { CameraButton, MicButton } from "./MuteButtons";
+import { CameraButton, GuestScreenShareButton, MicButton } from "./MuteButtons";
 import toastNotification from "./Notification";
 import { encodeSessionId } from "@/lib/helper";
 
@@ -12,12 +12,14 @@ const GuestVideoCall = (props) => {
   const { topic, token, sessions_password, sessionId, userName, password, isGuest } = props;
 
   const [inSession, setInSession] = useState(false);
-  const client = useRef(zoomClient);
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [isAudioMuted, setIsAudioMuted] = useState(true);
+  const [isEmpty, setIsEmpty] = useState(true);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+
+  const client = useRef(zoomClient);
   const videoContainerRef = useRef(null);
   const sessionJoined = useRef(false);
-  const [isEmpty, setIsEmpty] = useState(true);
 
   const joinSession = async () => {
     if (!userName) {
@@ -45,6 +47,16 @@ const GuestVideoCall = (props) => {
     await mediaStream.stopVideo();
     setIsAudioMuted(true);
     setIsVideoMuted(true);
+
+    client.current.on("active-share-change", handleActiveShareChange);
+    client.current.getAllUser().forEach((user) => {
+      if (user.sharerOn) {
+        mediaStream.startShareView(
+          document.querySelector("#guest-screen-share-content-video"),
+          user.userId
+        );
+      }
+    });
   };
 
   useEffect(() => {
@@ -53,6 +65,20 @@ const GuestVideoCall = (props) => {
       joinSession();
     }
   }, []);
+
+  const handleActiveShareChange = (payload) => {
+    const mediaStream = client.current.getMediaStream();
+    if (payload.state === "Active") {
+      mediaStream.startShareView(
+        document.querySelector("#guest-screen-share-content-video"),
+        payload.userId
+      );
+      setIsScreenSharing(true);
+    } else if (payload.state === "Inactive") {
+      mediaStream.stopShareView();
+      setIsScreenSharing(false);
+    }
+  };
 
   const renderVideo = async (event) => {
     const mediaStream = client.current.getMediaStream();
@@ -71,9 +97,9 @@ const GuestVideoCall = (props) => {
       );
       videoContainerRef.current.appendChild(userVideo);
 
-    }
+    };
     setIsEmpty(videoContainerRef.current.children.length === 0);
-  };
+  }
 
   const leaveSession = async () => {
     client.current.off("peer-video-state-change", (payload) => renderVideo(payload));
@@ -105,13 +131,22 @@ const GuestVideoCall = (props) => {
 
       <div className="video-container" style={inSession ? {} : { display: "none" }}>
         <video-player-container ref={videoContainerRef} style={videoPlayerStyle} >
-          {isEmpty===0 && <>
+          {isEmpty && !isScreenSharing && <>
             <div className="no-one-shared-screen">
               <p>No one started a video</p>
             </div>
           </>}
+          <video id="guest-screen-share-content-video" 
+          // height={"100%"} width={"100%"}
+            style={isScreenSharing ? {} : { display: "none" }}
+          ></video>
+          <canvas id="guest-screen-share-content-canvas" 
+          // height={"100%"} width={"100%"}
+            style={isScreenSharing ? {} : { display: "none" }}
+          ></canvas>
         </video-player-container>
       </div>
+
       <div className="call-btn-container">
         <div className="call-btn-div">
           <CameraButton
@@ -124,6 +159,12 @@ const GuestVideoCall = (props) => {
             isAudioMuted={isAudioMuted}
             client={client}
             setIsAudioMuted={setIsAudioMuted}
+          />
+          <GuestScreenShareButton
+            client={client}
+            isScreenSharing={isScreenSharing}
+            setIsScreenSharing={setIsScreenSharing}
+            renderVideo={renderVideo}
           />
           <Button type="primary" danger onClick={leaveSession} title="leave session">
             Leave
@@ -143,7 +184,7 @@ const videoPlayerStyle = {
   alignItems: "stretch",
   height: "100%",
   width: "100%",
-  padding: "20px",
+  // padding: "20px",
   boxSizing: "border-box",
   overflow: "hidden",
 };

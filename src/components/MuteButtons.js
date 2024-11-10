@@ -1,4 +1,4 @@
-import { Mic, MicOff, Video, VideoOff } from "lucide-react";
+import { Mic, MicOff, ScreenShare, ScreenShareOff, Video, VideoOff } from "lucide-react";
 import { Button } from "antd";
 
 const MicButton = (props) => {
@@ -50,4 +50,78 @@ const CameraButton = (props) => {
   );
 };
 
-export { MicButton, CameraButton };
+const ScreenShareButton = (props) => {
+  const { client, isScreenSharing, setIsScreenSharing, renderVideo, isGuest = false } = props;
+
+  const onScreenShareClick = async () => {
+    const mediaStream = client.current.getMediaStream();
+
+    try {
+      if (isScreenSharing) {
+        await mediaStream.stopShareScreen();
+        setIsScreenSharing(false);
+      } else {
+        // Start screen sharing
+        if (mediaStream.isStartShareScreenWithVideoElement()) {
+          await mediaStream.startShareScreen(
+            document.querySelector("#my-screen-share-content-video")
+          );
+        } else {
+          await mediaStream.startShareScreen(
+            document.querySelector("#my-screen-share-content-canvas")
+          );
+        }
+        setIsScreenSharing(true);
+      }
+    } catch (error) {
+      console.error("Error toggling screen sharing:", error);
+    }
+  };
+
+  return (
+    <div onClick={onScreenShareClick} title="screen share">
+      <Button type="primary">
+        {isScreenSharing ? <ScreenShareOff /> : <ScreenShare />}
+      </Button>
+    </div>
+  );
+}
+
+const GuestScreenShareButton = (props) => {
+  const { client, isScreenSharing, setIsScreenSharing, renderVideo, isGuest = false } = props;
+
+  const onScreenShareClick = async () => {
+    const mediaStream = client.current.getMediaStream();
+
+    try {
+      if (isScreenSharing) {
+        await mediaStream.stopShareScreen();
+        setIsScreenSharing(false);
+      } else {
+        // Start screen sharing
+        if (mediaStream.isStartShareScreenWithVideoElement()) {
+          await mediaStream.startShareScreen(
+            document.querySelector("#guest-screen-share-content-video")
+          );
+        } else {
+          await mediaStream.startShareScreen(
+            document.querySelector("#guest-screen-share-content-canvas")
+          );
+        }
+        setIsScreenSharing(true);
+      }
+    } catch (error) {
+      console.error("Error toggling screen sharing:", error);
+    }
+  };
+
+  return (
+    <div onClick={onScreenShareClick} title="screen share">
+      <Button type="primary">
+        {isScreenSharing ? <ScreenShareOff /> : <ScreenShare />}
+      </Button>
+    </div>
+  );
+}
+
+export { MicButton, CameraButton, ScreenShareButton, GuestScreenShareButton };

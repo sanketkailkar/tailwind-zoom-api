@@ -4,7 +4,7 @@ import { VideoQuality } from "@zoom/videosdk";
 import { Button } from "antd";
 import { useEffect, useRef, useState } from "react";
 import "../styles/videoCall.css";
-import { CameraButton, MicButton } from "./MuteButtons";
+import { CameraButton, MicButton, ScreenShareButton } from "./MuteButtons";
 import toastNotification from "./Notification";
 import { encodeSessionId } from "@/lib/helper";
 
@@ -12,12 +12,14 @@ const Videocall = (props) => {
   const { topic, token, sessions_password, sessionId, userName, password, isGuest } = props;
 
   const [inSession, setInSession] = useState(false);
-  const client = useRef(zoomClient);
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [isAudioMuted, setIsAudioMuted] = useState(true);
+  const [isEmpty, setIsEmpty] = useState(true);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+
+  const client = useRef(zoomClient);
   const videoContainerRef = useRef(null);
   const sessionJoined = useRef(false);
-  const [isEmpty, setIsEmpty] = useState(true);
 
   const joinSession = async () => {
     if (!userName) {
@@ -45,6 +47,17 @@ const Videocall = (props) => {
     await mediaStream.stopVideo();
     setIsAudioMuted(true);
     setIsVideoMuted(true);
+
+    client.current.on("active-share-change", handleActiveShareChange);
+
+    client.current.getAllUser().forEach((user) => {
+      if (user.sharerOn) {
+        mediaStream.startShareView(
+          document.querySelector("#my-screen-share-content-video"),
+          user.userId
+        );
+      }
+    });
   };
 
   useEffect(() => {
@@ -53,6 +66,21 @@ const Videocall = (props) => {
       joinSession();
     }
   }, []);
+
+  const handleActiveShareChange = (payload) => {
+    const mediaStream = client.current.getMediaStream();
+
+    if (payload.state === "Active") {
+      mediaStream.startShareView(
+        document.querySelector("#my-screen-share-content-video"),
+        payload.userId
+      );
+      setIsScreenSharing(true);
+    } else if (payload.state === "Inactive") {
+      mediaStream.stopShareView();
+      setIsScreenSharing(false);
+    }
+  };
 
   const renderVideo = async (event) => {
     const mediaStream = client.current.getMediaStream();
@@ -105,13 +133,16 @@ const Videocall = (props) => {
 
       <div className="video-container" style={inSession ? {} : { display: "none" }}>
         <video-player-container ref={videoContainerRef} style={videoPlayerStyle} >
-          {isEmpty===0 || isEmpty && <>
+          {isEmpty && !isScreenSharing && <>
             <div className="no-one-shared-screen">
               <p>No one started a video</p>
             </div>
           </>}
+          <video id="my-screen-share-content-video" style={isScreenSharing ? {} : { display: "none" }}></video>
+          <canvas id="my-screen-share-content-canvas" style={isScreenSharing ? {} : { display: "none" }}></canvas>
         </video-player-container>
       </div>
+
       <div className="call-btn-container">
         <div className="call-btn-div">
           <CameraButton
@@ -124,6 +155,12 @@ const Videocall = (props) => {
             isAudioMuted={isAudioMuted}
             client={client}
             setIsAudioMuted={setIsAudioMuted}
+          />
+          <ScreenShareButton
+            client={client}
+            isScreenSharing={isScreenSharing}
+            setIsScreenSharing={setIsScreenSharing}
+            renderVideo={renderVideo}
           />
           <Button type="primary" danger onClick={leaveSession} title="leave session">
             Leave
@@ -143,7 +180,7 @@ const videoPlayerStyle = {
   alignItems: "stretch",
   height: "100%",
   width: "100%",
-  padding: "20px",
+  // padding: "20px",
   boxSizing: "border-box",
   overflow: "hidden",
 };

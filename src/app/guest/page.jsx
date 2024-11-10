@@ -55,7 +55,7 @@ const JoiningPage = () => {
                     sessionId: encodeSessionId(id),
                     type: "live"
                 });
-  
+
                 if (response.data.user_count >= 2) {
                     setLimitReached(true);
                     return;
@@ -70,7 +70,7 @@ const JoiningPage = () => {
                 setLoading(false);
             }
         };
-        
+
         if (!getSessionCalled.current) {
             fetchSession();
             getSessionCalled.current = true;
@@ -98,7 +98,7 @@ const JoiningPage = () => {
     return (
         <div>
             <p>Session Title: {session}</p>
-            {loading ? (
+            {/* {loading ? (
                 "Loading..."
             ) : !isLimitReached ? (
                 <>
@@ -122,7 +122,28 @@ const JoiningPage = () => {
                 </>
             ) : (
                 <div>Limit Reached</div>
-            )}
+            )} */}
+            {
+                loading ? <p>Loading...</p> : <>
+                    <Input
+                        value={userName}
+                        onChange={handleOnChange}
+                        className="user-name"
+                        placeholder="username"
+                        type="text"
+                        style={{ width: "200px" }}
+                    />
+                    <Button
+                        disabled={!userName}
+                        className="flex flex-1"
+                        type="primary"
+                        onClick={handleJoinSession}
+                        title="join session"
+                    >
+                        Join
+                    </Button>
+                </>
+            }
         </div>
     );
 };

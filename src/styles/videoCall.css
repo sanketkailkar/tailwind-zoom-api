@@ -58,6 +58,7 @@ video-player {
 .video-container {
     width: 80%;
     height: 100%;
+    box-sizing: border-box;
 
     span {
         color: white;
@@ -91,9 +92,28 @@ video-player {
 }
 
 #my-screen-share-content-video,
+#my-screen-share-content-canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    position: absolute;
+    z-index: 999;
+}
+
 #users-screen-share-content-canvas {
     width: 100%;
     height: 100%;
+    border-radius: 10px;
+    position: absolute;
+    z-index: 999;
+}
+
+#guest-screen-share-content-canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    position: absolute;
+    z-index: 999;
 }
 
 .user-video-container {
@@ -122,6 +142,7 @@ video-player {
     align-items: center;
     gap: 20px;
 }
+
 .user-container {
     width: 100%;
     height: 100%;
@@ -131,6 +152,7 @@ video-player {
     border: 1px solid white;
     border-radius: 10px;
 }
+
 .user-name-body {
     width: 150px;
     height: 150px;
@@ -141,6 +163,7 @@ video-player {
     justify-content: center;
     align-items: center;
 }
+
 .user-name {
     color: white;
     font-size: larger;
@@ -154,6 +177,6 @@ video-player {
     align-items: center;
 }
 
-.no-one-shared-screen > p {
+.no-one-shared-screen>p {
     color: white;
 }

@@ -1,8 +1,7 @@
 "use client"
 import { zoomClient } from "@/lib/ZoomClient";
 import { VideoQuality } from "@zoom/videosdk";
-import { Button, Input } from "antd";
-import { PhoneOff } from "lucide-react";
+import { Button } from "antd";
 import { useEffect, useRef, useState } from "react";
 import "../styles/videoCall.css";
 import { CameraButton, MicButton } from "./MuteButtons";
@@ -10,22 +9,17 @@ import toastNotification from "./Notification";
 import { encodeSessionId } from "@/lib/helper";
 
 const Videocall = (props) => {
-
-  const { topic, token, sessions_password, sessionNumber, sessionId, isGuest, userName, password } = props;
+  const { topic, token, sessions_password, sessionId, userName, password, isGuest } = props;
 
   const [inSession, setInSession] = useState(false);
   const client = useRef(zoomClient);
-  const [isVideoMuted, setIsVideoMuted] = useState(
-    !client.current.getCurrentUserInfo()?.bVideoOn
-  );
-  const [isAudioMuted, setIsAudioMuted] = useState(
-    client.current.getCurrentUserInfo()?.muted ?? true
-  );
+  const [isVideoMuted, setIsVideoMuted] = useState(true); // Start with video muted
+  const [isAudioMuted, setIsAudioMuted] = useState(true); // Start with audio muted
   const videoContainerRef = useRef(null);
   const sessionJoined = useRef(false);
+  const [isEmpty, setIsEmpty] = useState(true);
 
   const joinSession = async () => {
-
     if (!userName) {
       toastNotification("error", "Username is required");
       return;
@@ -35,27 +29,22 @@ const Videocall = (props) => {
       toastNotification("error", "Password is required");
       return;
     }
+
     await client.current.init("en-US", "Global", { patchJsMedia: true });
 
-    client.current.on("peer-video-state-change", (payload) => void renderVideo(payload));
+    client.current.on("peer-video-state-change", (payload) => renderVideo(payload));
 
     await client.current.join(topic, token, userName, password).catch((e) => {
       console.log(e);
     });
     setInSession(true);
 
+    // Initialize audio and video settings
     const mediaStream = client.current.getMediaStream();
-
-    await mediaStream.startAudio();
-    setIsAudioMuted(mediaStream.isAudioMuted());
-
-    await mediaStream.startVideo();
-    setIsVideoMuted(!mediaStream.isCapturingVideo());
-
-    await renderVideo({
-      action: "Start",
-      userId: client.current.getCurrentUserInfo().userId,
-    });
+    await mediaStream.stopAudio();
+    await mediaStream.stopVideo();
+    setIsAudioMuted(true);
+    setIsVideoMuted(true);
   };
 
   useEffect(() => {
@@ -69,27 +58,27 @@ const Videocall = (props) => {
     const mediaStream = client.current.getMediaStream();
 
     if (event.action === "Stop") {
-      const element = await mediaStream.detachVideo(event.userId);
-      Array.isArray(element)
-        ? element.forEach((el) => el.remove())
-        : element?.remove();
+      const elements = await mediaStream.detachVideo(event.userId);
+      if (Array.isArray(elements)) {
+        elements.forEach((el) => el.remove());
+      } else {
+        elements?.remove();
+      }
     } else {
       const userVideo = await mediaStream.attachVideo(
         event.userId,
         VideoQuality.Video_360P
       );
       videoContainerRef.current.appendChild(userVideo);
+
+      setIsEmpty(videoContainerRef.current.children.length === 0);
     }
   };
 
   const leaveSession = async () => {
-    client.current.off(
-      "peer-video-state-change",
-      (payload) => void renderVideo(payload)
-    );
+    client.current.off("peer-video-state-change", (payload) => renderVideo(payload));
 
     await client.current.leave().catch((e) => console.log("leave error", e));
-    // hard refresh to clear the state
     window.location.href = "/";
   };
 
@@ -114,11 +103,14 @@ const Videocall = (props) => {
         </Button>
       </h2>
 
-      <div
-        className="video-container"
-        style={inSession ? {} : { display: "none" }}
-      >
-        <video-player-container ref={videoContainerRef} style={videoPlayerStyle} />
+      <div className="video-container" style={inSession ? {} : { display: "none" }}>
+        <video-player-container ref={videoContainerRef} style={videoPlayerStyle} >
+          {isEmpty && <>
+            <div className="no-one-shared-screen">
+              <p>No one started a video</p>
+            </div>
+          </>}
+        </video-player-container>
       </div>
       <div className="call-btn-container">
         <div className="call-btn-div">
@@ -152,6 +144,6 @@ const videoPlayerStyle = {
   height: "100%",
   width: "100%",
   padding: "20px",
-  boxSizing: " border-box",
+  boxSizing: "border-box",
   overflow: "hidden",
 };

@@ -4,7 +4,11 @@ video-player-container {
     display: flex !important;
     flex-wrap: wrap;
     gap: 20px;
+    box-sizing: border-box;
     align-content: baseline;
+    background: #000000;
+    border: 2px solid rgb(161, 161, 161);
+    border-radius: 20px;
 }
 
 video-player {
@@ -15,8 +19,8 @@ video-player {
     align-items: center;
     flex: 1 1 48%;
     /* aspect-ratio: 16/9; */
-    border: 2px solid rgb(161, 161, 161);
-    border-radius: 20px;
+    /* border: 2px solid rgb(161, 161, 161); */
+    /* border-radius: 20px; */
 }
 
 .video_player_container {
@@ -45,15 +49,10 @@ video-player {
 
 .user-input {
     margin: 20px;
-    /* Retain consistent margin around the input */
     width: calc(100% - 40px);
-    /* Subtract margin to maintain visibility */
     max-width: 400px;
-    /* Maximum width constraint */
     min-width: 200px;
-    /* Minimum width constraint */
     box-sizing: border-box;
-    /* Include padding and border in the total width */
 }
 
 .video-container {
@@ -113,4 +112,48 @@ video-player {
     text-align: center;
     padding: 5px;
     font-size: 0.9em;
+}
+
+.participants {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+.user-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid white;
+    border-radius: 10px;
+}
+.user-name-body {
+    width: 150px;
+    height: 150px;
+    background-color: #08335a;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.user-name {
+    color: white;
+    font-size: larger;
+}
+
+.no-one-shared-screen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.no-one-shared-screen > p {
+    color: white;
 }

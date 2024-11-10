@@ -15,6 +15,7 @@ const JoiningPage = () => {
     const getSessionCalled = useRef(false);
     const [loading, setLoading] = useState(false);
     const [sessionName, setSessionName] = useState('');
+    const [isLimitReached, setLimitReached] = useState(false);
 
     // State variables for session parameters
     const [session, setSession] = useState('');
@@ -22,7 +23,6 @@ const JoiningPage = () => {
     const [id, setId] = useState('');
 
     useEffect(() => {
-        // Ensure the code runs only in the client
         if (typeof window !== 'undefined') {
             const searchParams = new URLSearchParams(window.location.search);
             setSession(searchParams.get('session'));
@@ -33,7 +33,7 @@ const JoiningPage = () => {
     }, []);
 
     useEffect(() => {
-        if (!session || !id) return; // Wait for session to be set
+        if (!session || !id) return;
 
         const fetchToken = async () => {
             try {
@@ -51,15 +51,17 @@ const JoiningPage = () => {
         const fetchSession = async () => {
             try {
                 setLoading(true);
-                const response = await axios.post(`/api/getSessionDetails`,{
-                    sessionId : encodeSessionId(id),
-                    type : "live"
+                const response = await axios.post(`/api/getSessionDetails`, {
+                    sessionId: encodeSessionId(id),
+                    type: "live"
                 });
-
+  
+                if (response.data.user_count >= 2) {
+                    setLimitReached(true);
+                    return;
+                }
                 setSessionName(response.data.session_name);
                 const serializedCookie = serialize(SESSION, JSON.stringify(response.data));
-
-                // Setting cookie using document.cookie on the client side
                 document.cookie = serializedCookie;
             } catch (error) {
                 console.error("Error fetching session details:", error);
@@ -68,6 +70,7 @@ const JoiningPage = () => {
                 setLoading(false);
             }
         };
+        
         if (!getSessionCalled.current) {
             fetchSession();
             getSessionCalled.current = true;
@@ -95,28 +98,31 @@ const JoiningPage = () => {
     return (
         <div>
             <p>Session Title: {session}</p>
-            {
-                loading ? "Loading..." :
-                    <>
-                        <Input
-                            value={userName}
-                            onChange={handleOnChange}
-                            className="user-name"
-                            placeholder="username"
-                            type="text"
-                            style={{ width: "200px" }}
-                        />
-                        <Button
-                            disabled={!userName}
-                            className="flex flex-1"
-                            type="primary"
-                            onClick={handleJoinSession}
-                            title="join session"
-                        >
-                            Join
-                        </Button>
-                    </>
-            }
+            {loading ? (
+                "Loading..."
+            ) : !isLimitReached ? (
+                <>
+                    <Input
+                        value={userName}
+                        onChange={handleOnChange}
+                        className="user-name"
+                        placeholder="username"
+                        type="text"
+                        style={{ width: "200px" }}
+                    />
+                    <Button
+                        disabled={!userName}
+                        className="flex flex-1"
+                        type="primary"
+                        onClick={handleJoinSession}
+                        title="join session"
+                    >
+                        Join
+                    </Button>
+                </>
+            ) : (
+                <div>Limit Reached</div>
+            )}
         </div>
     );
 };

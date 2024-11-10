@@ -4,22 +4,31 @@ import { VideoQuality } from "@zoom/videosdk";
 import { Button } from "antd";
 import { useEffect, useRef, useState } from "react";
 import "../styles/videoCall.css";
-import { CameraButton, MicButton } from "./MuteButtons";
+import { CameraButton, EndCallButton, MicButton } from "./MuteButtons";
 import toastNotification from "./Notification";
 import { encodeSessionId } from "@/lib/helper";
+import { getSessionInfo } from "@/services/service";
 
-const GuestVideoCall = (props) => {
+const Videocall = (props) => {
   const { topic, token, sessions_password, sessionId, userName, password, isGuest } = props;
 
   const [inSession, setInSession] = useState(false);
   const client = useRef(zoomClient);
-  const [isVideoMuted, setIsVideoMuted] = useState(true);
-  const [isAudioMuted, setIsAudioMuted] = useState(true);
+  const [isVideoMuted, setIsVideoMuted] = useState(true); // Start with video muted
+  const [isAudioMuted, setIsAudioMuted] = useState(true); // Start with audio muted
   const videoContainerRef = useRef(null);
+  const userContainerRef = useRef(null);
   const sessionJoined = useRef(false);
-  const [isEmpty, setIsEmpty] = useState(true);
+  const [participants, setParticipants] = useState([]); // Track participants
 
   const joinSession = async () => {
+    const sessionDetails = await getSessionInfo(sessionId);
+
+    if (sessionDetails?.user_count === 2) {
+      toastNotification("error", "Number of users limit reached!!!");
+      return;
+    }
+
     if (!userName) {
       toastNotification("error", "Username is required");
       return;
@@ -33,6 +42,8 @@ const GuestVideoCall = (props) => {
     await client.current.init("en-US", "Global", { patchJsMedia: true });
 
     client.current.on("peer-video-state-change", (payload) => renderVideo(payload));
+    client.current.on("user-added", (event) => addParticipant(event));
+    client.current.on("user-removed", (event) => removeParticipant(event.userId));
 
     await client.current.join(topic, token, userName, password).catch((e) => {
       console.log(e);
@@ -54,6 +65,27 @@ const GuestVideoCall = (props) => {
     }
   }, []);
 
+  const addParticipant = (event) => {
+    if (participants.length >= 2) {
+      return;
+    }
+    const newParticipants = event.map(user => ({
+      userId: user.userId,
+      userName: user.displayName || `User ${user.userId}`,
+    }));
+
+    setParticipants(prevParticipants => [
+      ...prevParticipants,
+      ...newParticipants,
+    ]);
+  };
+
+  const removeParticipant = (userId) => {
+    setParticipants((prevParticipants) =>
+      prevParticipants.filter((participant) => participant.userId !== userId)
+    );
+  };
+
   const renderVideo = async (event) => {
     const mediaStream = client.current.getMediaStream();
 
@@ -70,13 +102,13 @@ const GuestVideoCall = (props) => {
         VideoQuality.Video_360P
       );
       videoContainerRef.current.appendChild(userVideo);
-
-      setIsEmpty(videoContainerRef.current.children.length === 0);
     }
   };
 
   const leaveSession = async () => {
     client.current.off("peer-video-state-change", (payload) => renderVideo(payload));
+    client.current.off("user-added", (event) => addParticipant(event));
+    client.current.off("user-removed", (event) => removeParticipant(event.userId));
 
     await client.current.leave().catch((e) => console.log("leave error", e));
     window.location.href = "/";
@@ -94,6 +126,14 @@ const GuestVideoCall = (props) => {
       });
   };
 
+  const UserContainer = ({ username }) => (
+    <div className="user-container" ref={userContainerRef}>
+      <div className="user-name-body">
+        <p className="user-name">{username}</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="video_player_container">
       <h2 className="session-title">
@@ -105,11 +145,13 @@ const GuestVideoCall = (props) => {
 
       <div className="video-container" style={inSession ? {} : { display: "none" }}>
         <video-player-container ref={videoContainerRef} style={videoPlayerStyle} >
-          {isEmpty && <>
-            <div className="no-one-shared-screen">
-              <p>No one started a video</p>
+          {isVideoMuted &&
+            <div className="participants">
+              {participants.map((participant) => (
+                <UserContainer key={participant.userId} username={participant.userName} />
+              ))}
             </div>
-          </>}
+          }
         </video-player-container>
       </div>
       <div className="call-btn-container">
@@ -125,7 +167,7 @@ const GuestVideoCall = (props) => {
             client={client}
             setIsAudioMuted={setIsAudioMuted}
           />
-          <Button type="primary" danger onClick={leaveSession} title="leave session">
+            <Button type="primary" danger onClick={leaveSession} title="leave session">
             Leave
           </Button>
         </div>
@@ -134,7 +176,7 @@ const GuestVideoCall = (props) => {
   );
 };
 
-export default GuestVideoCall;
+export default Videocall;
 
 const videoPlayerStyle = {
   display: "flex",

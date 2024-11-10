@@ -225,3 +225,15 @@ const videoPlayerPopUpStyle = {
   zIndex: 9999,
 };
 
+const videoPlayer = {
+  width: "100%",
+  height: "100%",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  flex: "1 1 48%",
+  /* aspect-ratio: 16/9; */
+  border: "2px solid rgb(161, 161, 161)",
+  borderRadius: "20px",
+}
+

@@ -4,11 +4,12 @@ import { VideoQuality } from "@zoom/videosdk";
 import { Button } from "antd";
 import { useEffect, useRef, useState } from "react";
 import "../styles/videoCall.css";
-import { CameraButton, MicButton, ScreenShareButton } from "./MuteButtons";
+import { CameraButton, ScreenShareButton } from "./MuteButtons";
 import toastNotification from "./Notification";
 import { encodeSessionId } from "@/lib/helper";
+import { Mic, MicOff } from "lucide-react";
 
-const Videocall = (props) => {
+const VideoCall = (props) => {
   const { topic, token, sessions_password, sessionId, userName, password, isGuest } = props;
 
   const [inSession, setInSession] = useState(false);
@@ -20,6 +21,7 @@ const Videocall = (props) => {
   const client = useRef(zoomClient);
   const videoContainerRef = useRef(null);
   const sessionJoined = useRef(false);
+  const onScreenShareClickRef = useRef(null);
 
   const joinSession = async () => {
     if (!userName) {
@@ -35,6 +37,7 @@ const Videocall = (props) => {
     await client.current.init("en-US", "Global", { patchJsMedia: true });
 
     client.current.on("peer-video-state-change", (payload) => renderVideo(payload));
+    client.current.on("active-share-change", handleActiveShareChange);
 
     await client.current.join(topic, token, userName, password).catch((e) => {
       console.log(e);
@@ -48,12 +51,10 @@ const Videocall = (props) => {
     setIsAudioMuted(true);
     setIsVideoMuted(true);
 
-    client.current.on("active-share-change", handleActiveShareChange);
-
     client.current.getAllUser().forEach((user) => {
       if (user.sharerOn) {
         mediaStream.startShareView(
-          document.querySelector("#my-screen-share-content-video"),
+          document.querySelector("#users-screen-share-content-canvas"),
           user.userId
         );
       }
@@ -67,12 +68,29 @@ const Videocall = (props) => {
     }
   }, []);
 
+  useEffect(() => {
+    if (client) {
+      client.current.on('passively-stop-share', (payload) => {
+        console.log('Screen sharing stopped:', payload);
+        if (onScreenShareClickRef.current) {
+          onScreenShareClickRef.current();
+        }
+      });
+    }
+    return () => {
+      if (client) {
+        client.current.off('passively-stop-share');
+      }
+    };
+  }, [client]);
+
+
   const handleActiveShareChange = (payload) => {
     const mediaStream = client.current.getMediaStream();
 
     if (payload.state === "Active") {
       mediaStream.startShareView(
-        document.querySelector("#my-screen-share-content-video"),
+        document.querySelector("#users-screen-share-content-canvas"),
         payload.userId
       );
       setIsScreenSharing(true);
@@ -104,7 +122,10 @@ const Videocall = (props) => {
   }
 
   const leaveSession = async () => {
-    client.current.off("peer-video-state-change", (payload) => renderVideo(payload));
+    // client.current.off("peer-video-state-change", (payload) => renderVideo(payload));
+
+    client.current.off("peer-video-state-change", renderVideo);
+    client.current.off("active-share-change", handleActiveShareChange);
 
     await client.current.leave().catch((e) => console.log("leave error", e));
     window.location.href = "/";
@@ -120,6 +141,16 @@ const Videocall = (props) => {
       .catch((err) => {
         console.error("Failed to copy: ", err);
       });
+  };
+
+  const toggleAudio = () => {
+    const mediaStream = client.current.getMediaStream();
+    if (isAudioMuted) {
+      mediaStream.startAudio();
+    } else {
+      mediaStream.stopAudio();
+    }
+    setIsAudioMuted(!isAudioMuted);
   };
 
   return (
@@ -139,7 +170,7 @@ const Videocall = (props) => {
             </div>
           </>}
           <video id="my-screen-share-content-video" style={isScreenSharing ? {} : { display: "none" }}></video>
-          <canvas id="my-screen-share-content-canvas" style={isScreenSharing ? {} : { display: "none" }}></canvas>
+          <canvas id="users-screen-share-content-canvas" style={isScreenSharing ? {} : { display: "none" }}></canvas>
         </video-player-container>
       </div>
 
@@ -151,16 +182,14 @@ const Videocall = (props) => {
             setIsVideoMuted={setIsVideoMuted}
             renderVideo={renderVideo}
           />
-          <MicButton
-            isAudioMuted={isAudioMuted}
-            client={client}
-            setIsAudioMuted={setIsAudioMuted}
-          />
+          <Button type="primary" onClick={toggleAudio}>
+            {isAudioMuted ? <MicOff /> : <Mic />}
+          </Button>
           <ScreenShareButton
             client={client}
             isScreenSharing={isScreenSharing}
             setIsScreenSharing={setIsScreenSharing}
-            renderVideo={renderVideo}
+            onScreenShareClickRef={onScreenShareClickRef}
           />
           <Button type="primary" danger onClick={leaveSession} title="leave session">
             Leave
@@ -171,7 +200,7 @@ const Videocall = (props) => {
   );
 };
 
-export default Videocall;
+export default VideoCall;
 
 const videoPlayerStyle = {
   display: "flex",

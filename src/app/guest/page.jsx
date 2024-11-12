@@ -7,6 +7,7 @@ import axios from "axios";
 import { serialize } from "cookie";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import "../../styles/joiningPage.css";
 
 const JoiningPage = () => {
     const { push } = useRouter();
@@ -75,7 +76,7 @@ const JoiningPage = () => {
             fetchSession();
             getSessionCalled.current = true;
         }
-    }, [session]);
+    }, [id]);
 
     const handleJoinSession = () => {
         if (!userName) {
@@ -96,53 +97,32 @@ const JoiningPage = () => {
     };
 
     return (
-        <div>
-            <p>Session Title: {session}</p>
-            {/* {loading ? (
+        <div className="main-container-joining-page">
+            {loading ? (
                 "Loading..."
-            ) : !isLimitReached ? (
-                <>
-                    <Input
-                        value={userName}
-                        onChange={handleOnChange}
-                        className="user-name"
-                        placeholder="username"
-                        type="text"
-                        style={{ width: "200px" }}
-                    />
-                    <Button
-                        disabled={!userName}
-                        className="flex flex-1"
-                        type="primary"
-                        onClick={handleJoinSession}
-                        title="join session"
-                    >
-                        Join
-                    </Button>
-                </>
-            ) : (
-                <div>Limit Reached</div>
-            )} */}
-            {
-                loading ? <p>Loading...</p> : <>
-                    <Input
-                        value={userName}
-                        onChange={handleOnChange}
-                        className="user-name"
-                        placeholder="username"
-                        type="text"
-                        style={{ width: "200px" }}
-                    />
-                    <Button
-                        disabled={!userName}
-                        className="flex flex-1"
-                        type="primary"
-                        onClick={handleJoinSession}
-                        title="join session"
-                    >
-                        Join
-                    </Button>
-                </>
+            ) :
+                <div className="user-input-box">
+                    <p>Session Title: {session}</p>
+                    <div className="input-box">
+                        <Input
+                            value={userName}
+                            onChange={handleOnChange}
+                            className="user-name"
+                            placeholder="username"
+                            type="text"
+                            style={{ width: "200px" }}
+                        />
+                        <Button
+                            disabled={!userName}
+                            className="flex flex-1"
+                            type="primary"
+                            onClick={handleJoinSession}
+                            title="join session"
+                        >
+                            Join
+                        </Button>
+                    </div>
+                </div>
             }
         </div>
     );

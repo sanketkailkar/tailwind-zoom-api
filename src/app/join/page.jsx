@@ -3,6 +3,7 @@ import toastNotification from "@/components/Notification";
 import { Button, Input } from "antd";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import "../../styles/joiningPage.css";
 
 const JoiningPage = () => {
     const { push } = useRouter();
@@ -33,25 +34,29 @@ const JoiningPage = () => {
     };
 
     return (
-        <div>
-            <p>Session Title: {session}</p>
-            <Input
-                value={userName}
-                onChange={handleOnChange}
-                className="user-name"
-                placeholder="username"
-                type="text"
-                style={{ width: "200px" }}
-            />
-            <Button
-                disabled={!userName}
-                className="flex flex-1"
-                type="primary"
-                onClick={handleJoinSession}
-                title="join session"
-            >
-                Join
-            </Button>
+        <div className="main-container-joining-page">
+            <div className="user-input-box">
+                <p>Session Title: {session}</p>
+                <div className="input-box">
+                    <Input
+                        value={userName}
+                        onChange={handleOnChange}
+                        className="user-name"
+                        placeholder="username"
+                        type="text"
+                        style={{ width: "200px" }}
+                    />
+                    <Button
+                        disabled={!userName}
+                        className="flex flex-1"
+                        type="primary"
+                        onClick={handleJoinSession}
+                        title="join session"
+                    >
+                        Join
+                    </Button>
+                </div>
+            </div>
         </div>
     );
 };
